@@ -1,0 +1,540 @@
+﻿Build1=Default,hk.b4a.customlistview.header
+File1=content.json
+File2=content2.json
+File3=EditHead.bal
+File4=EditLine.bal
+File5=InputBox.bal
+File6=main.bal
+FileGroup1=Default Group
+FileGroup2=Default Group
+FileGroup3=Default Group
+FileGroup4=Default Group
+FileGroup5=Default Group
+FileGroup6=Default Group
+Group=Default Group
+Library1=core
+Library2=json
+Library3=stringutils
+Library4=xcustomlistview
+Library5=xui
+Library6=xui views
+Library7=inputmenu
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="4" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+Module1=clsMapOfList
+Module2=modCommon
+NumberOfFiles=6
+NumberOfLibraries=7
+NumberOfModules=2
+Version=11
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: True
+	#IncludeTitle: True
+	#ApplicationLabel: CLV Header Example
+	#VersionCode: 1
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+	'These global variables will be declared once when the application starts.
+	'These variables can be accessed from all modules.
+	Private xui As XUI
+	Private timer As Timer
+End Sub
+
+Sub Globals
+	Dim clv1 As CustomListView
+	Dim Dialog As B4XDialog
+	Private objMapOfList As clsMapOfList
+	Private edtHead As EditText
+	Private edtItem As EditText
+	Private edtQty As EditText
+	Private sprHead As Spinner
+	' OHead record the text before change	
+	Private edtOHead As EditText
+	' OItem record the item before change
+	Private edtOItem As EditText
+	' OQty record the qty before change
+	Private edtOQty As EditText
+	Private lblHead As Label
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	Activity.LoadLayout("main.bal")
+	Activity.Title = "ListView With Section"	
+	
+	Activity.AddMenuItem("Add", "addItem")	
+	Activity.AddMenuItem("Reset", "reset")
+	Activity.AddMenuItem("Refresh", "refresh")
+	Activity.AddMenuItem("LogMapOne", "logmapone")
+	Activity.AddMenuItem("LogMapHeader", "logmapheader")
+	Activity.AddMenuItem("LogMapLine", "logmapline")
+	Activity.AddMenuItem("back", "back")
+	
+	objMapOfList.Initialize(Me, "EventHandler")	
+	Dialog.Initialize(Activity)
+	timer.Initialize("timer", 100)
+	
+End Sub
+
+Sub Activity_Resume
+	If clv1.IsInitialized Then
+		clv1.clear
+	End If
+	If objMapOfList.IsInitialized And objMapOfList.Size = 0 Then
+		objMapOfList.FillTheMap2
+	End If
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	If timer.isInitialized Then
+		timer.Enabled = False
+	End If
+End Sub
+
+Private Sub logmapone_click
+	objMapOfList.LogStructure("mapone", objMapOfList.mapOne)
+End Sub
+
+Private Sub logmapheader_click
+	objMapOfList.LogStructure("mapheader", objMapOfList.mapHeader)
+End Sub
+
+Private Sub logmapline_click
+	objMapOfList.LogStructure("mapline", objMapOfList.mapLine)
+End Sub
+
+Private Sub reset_click
+	If clv1.IsInitialized = False Then
+		Return		
+	End If
+	If objMapOfList.IsInitialized = False Then
+		Return
+	End If
+	clv1.Clear
+	objMapOfList.ClearAll
+	objMapOfList.FillTheMap2
+End Sub
+
+Private Sub refresh_click
+	If clv1.IsInitialized = False Then
+		Return 
+	End If
+	If objMapOfList.IsInitialized = False Then
+		Return
+	End If
+	clv1.Clear
+	FillListView
+	clv1.Refresh
+End Sub
+
+Private Sub back_click
+	Activity.Finish
+End Sub
+
+Private Sub addItem_click
+	
+	If objMapOfList.IsInitialized = False Then
+		Return
+	End If	
+	Dim p As B4XView = xui.CreatePanel("")
+	p.SetLayoutAnimated(0, 0, 0, 250dip, 300dip) 'set the content size
+	p.LoadLayout("InputBox.bal")	
+	sprHead.DropdownBackgroundColor = Colors.White
+	sprHead.DropdownTextColor = Colors.Black
+	sprHead.TextColor = Colors.Black
+	edtHead.Visible = False
+	Dim lstChoice As List = objMapOfList.HeaderList
+	lstChoice.InsertAt(0, "choose...")
+	lstChoice.Add("new head...")
+	sprHead.AddAll(lstChoice)
+	sprHead.SelectedIndex = 0
+	Dim rs As ResumableSub = Dialog.ShowCustom(p, "Ok", "", "Cancel")
+	Wait For (rs) Complete (Result As Int)
+	If Result = xui.DialogResponse_Positive Then		
+		If sprHead.SelectedIndex = 0 Then 
+			'choose...
+			Return
+		End If				
+		If edtItem.Text = "" Or IsNumber(edtQty.Text) = False Then
+			Return
+		End If
+		If sprHead.SelectedIndex = sprHead.Size -1 And edtHead.Text <> "" Then
+			'add new head
+			objMapOfList.AddItem( _
+				CreateMap( _
+					"head": CreateMap("text": edtHead.Text), _
+					"line": CreateMap("item": edtItem.Text, "qty": edtQty.Text) _
+				) _
+			)
+		End If
+		If sprHead.SelectedIndex <> sprHead.Size -1 Then
+			'add to existing head
+			objMapOfList.AddItem( _
+				CreateMap( _
+					"head": CreateMap("text": sprHead.SelectedItem), _
+					"line": CreateMap("item": edtItem.Text, "qty": edtQty.Text) _
+				) _
+			)
+		End If
+	End If
+End Sub
+
+Private Sub editHead(idx As Int, headid As Int)
+	If objMapOfList.IsInitialized = False Then
+		Return
+	End If
+	Dim text As String = objMapOfList.getTextByHeadId(headid)
+	Dim p As B4XView = xui.CreatePanel("")
+	p.SetLayoutAnimated(0, 0, 0, 250dip, 90dip) 'set the content size
+	p.LoadLayout("EditHead.bal")	
+	edtOHead.Visible = False
+	edtOHead.Text = text
+	edtHead.Visible = True
+	edtHead.Text = text
+	timer.Enabled = True
+	Wait For timer_Tick
+	timer.Enabled = False
+	edtHead.RequestFocus
+	edtHead.SelectAll
+	Dim rs As ResumableSub = Dialog.ShowCustom(p, "Ok", "", "Cancel")
+	Wait For (rs) Complete (Result As Int)
+	If Result = xui.DialogResponse_Positive Then
+		If edtOHead.Text = edtHead.Text Then
+			' No Change
+			Return		
+		End If	
+		If edtHead.Text = "" Then
+			Return	
+		End If
+		objMapOfList.setUIIndex(idx)
+		objMapOfList.EditHead( _
+			CreateMap( _
+				"head": CreateMap("headid": headid, "otext": edtOHead.Text, "text": edtHead.Text) _
+			) _
+		)		
+	End If
+End Sub
+
+Private Sub editLine(idx As Int, headid As Int, lineid As Int)
+	If objMapOfList.IsInitialized = False Then
+		Return
+	End If
+	Dim text_1 As String = objMapOfList.getTextByHeadId(headid)	
+	Dim item_1 As String = objMapOfList.getItemByLineId(lineid)
+	Dim qty_1 As Int = objMapOfList.getQtyByLineId(lineid)
+	Dim p As B4XView = xui.CreatePanel("")
+	p.SetLayoutAnimated(0, 0, 0, 250dip, 220dip) 'set the content size
+	p.LoadLayout("EditLine.bal")
+	'edtHead.Text = text_1
+	'edtHead.Enabled = False
+	lblHead.Text = text_1
+	edtOItem.Text = item_1
+	edtItem.Text = item_1
+	edtOQty.Text = qty_1
+	edtQty.Text = qty_1
+	timer.Enabled = True
+	Wait For timer_Tick
+	timer.Enabled = False
+	edtItem.RequestFocus
+	edtItem.SelectAll
+	Dim rs As ResumableSub = Dialog.ShowCustom(p, "Ok", "", "Cancel")
+	Wait For (rs) Complete (Result As Int)
+	If Result = xui.DialogResponse_Positive Then
+		If edtOItem.Text = edtItem.Text And edtOQty.Text = edtQty.Text Then
+			'No Change
+			Return
+		End If
+		If edtItem.Text = "" Or IsNumber(edtQty.Text) = False Then
+			Return
+		End If
+		objMapOfList.setUIIndex(idx)
+		objMapOfList.EditLine( _
+			CreateMap( _
+				"line": CreateMap("headid": headid, "lineid": lineid, "oitem": edtOItem.Text, "item": edtItem.Text, _
+					"oqty": edtOQty.Text, "qty": edtQty.Text) _
+			) _
+		)
+	End If
+End Sub
+
+Private Sub EventHandler(mapRes As Map) 'ignore
+	Dim action As String = mapRes.Get("action")	
+	Dim uiindex As Int = -1
+	Dim count As Int = -1
+	Dim headid As Int = -1
+	Dim lineid As Int = -1
+	If mapRes.ContainsKey("uiindex") Then
+		uiindex = mapRes.Get("uiindex")
+	End If
+	If mapRes.ContainsKey("count") Then
+		count = mapRes.Get("count")
+	End If
+	If mapRes.ContainsKey("headid") Then
+		headid = mapRes.Get("headid")
+	End If
+	If mapRes.ContainsKey("lineid") Then
+		lineid = mapRes.Get("lineid")
+	End If	
+	Select action
+		Case "filled"
+			FillListView
+		Case "headdeleted"			
+			Dim j As Int = 0
+			' First, delete all children
+			For j = count -1 To 0 Step -1
+				Dim temp As String = clv1.GetValue(uiindex + j + 1)
+				LogColor(temp, Colors.Blue)
+				clv1.RemoveAt(uiindex + j + 1)
+			Next
+			' Second, delete the parent
+			clv1.RemoveAt(uiindex)
+			clv1.Refresh
+		Case "linedeleted"
+			LogColor(clv1.GetValue(uiindex), Colors.Blue)
+			clv1.RemoveAt(uiindex)
+			clv1.Refresh
+		Case "headadded"
+			If headid = -1 Or lineid = -1 Then
+				Return
+			End If
+			Dim pnlHead As B4XView = xui.CreatePanel("")
+			pnlHead.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 50dip)
+			pnlHead.Tag = "Header"
+			clv1.Add(pnlHead, "H_" & headid)
+			Dim pnlLine As B4XView = xui.CreatePanel("")
+			pnlLine.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
+			pnlLine.Tag = "Line"
+			clv1.Add(pnlLine, $"L_${headid}_${lineid}"$)
+			timer.Enabled = True
+			Wait For timer_tick
+			timer.Enabled = False
+			clv1.JumpToItem(clv1.Size-1)
+		Case "lineadded"
+			If headid = -1 Or lineid = -1 Then
+				Return
+			End If
+			Dim pnlLine_1 As B4XView = xui.CreatePanel("")
+			pnlLine_1.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
+			pnlLine_1.Tag = "Line"			
+			Dim nextheadid As Int = FindNextHeadIndex(headid+1)			
+			If nextheadid = -1 Then
+				' No next head 
+				clv1.Add(pnlLine_1, $"L_${headid}_${lineid}"$)
+				timer.Enabled = True
+				Wait For timer_tick
+				timer.Enabled = False
+				clv1.JumpToItem(clv1.Size-1)
+			Else
+				clv1.InsertAt(nextheadid, pnlLine_1, $"L_${headid}_${lineid}"$)
+				timer.Enabled = True
+				Wait For timer_tick
+				timer.Enabled = False
+				clv1.JumpToItem(nextheadid)
+			End If		
+			clv1.Refresh	
+		Case "headedited"	
+			Dim pnlHead As B4XView = xui.CreatePanel("")
+			pnlHead.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 50dip)
+			pnlHead.Tag = "Header"
+			clv1.ReplaceAt(uiindex, pnlHead, 50dip, "H_" & headid)
+			clv1.Refresh
+		Case "lineedited"
+			Dim pnlLine_2 As B4XView = xui.CreatePanel("")
+			pnlLine_2.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
+			pnlLine_2.Tag = "Line"
+			clv1.ReplaceAt(uiindex, pnlLine_2, 40dip, $"L_${headid}_${lineid}"$) 
+			clv1.Refresh
+	End Select
+End Sub
+
+Private Sub FindNextHeadIndex(headid As Int) As Int
+	Dim i As Int = 0
+	For i = 0 To clv1.Size-1
+		If clv1.GetValue(i) = "H_" & headid Then
+			Return i
+		End If
+	Next
+	Return -1
+End Sub
+
+Private Sub clv1_ItemClick (Index As Int, Value As Object)	
+	If objMapOfList.IsInitialized = False Then
+		Return
+	End If
+	Dim str As String = objMapOfList.getContent(Value)
+	If str.IndexOf("^") = -1 Then
+		Dim msg As String = $"Index: ${Index}${CRLF}Value: ${Value}${CRLF}Text: ${str}"$ 
+		Log("ItemClick (Head) - " & CRLF & msg)
+		Msgbox2Async(msg, "Head Info", "OK", "", "", Null, True)
+		Return
+	End If
+	Dim arr() As String = Regex.Split("\^", str)
+	If arr.Length = 2 Then
+		Dim msg1 As String = $"Index: ${Index}${CRLF}Value: ${Value}${CRLF}Item: ${arr(0)}${CRLF}Qty: ${arr(1)}"$
+		Log("ItemClick (Line) - " & CRLF & msg)
+		Msgbox2Async(msg1, "Line Info", "OK", "", "", Null, True)
+		Return
+	End If
+	'Msgbox2Async(
+End Sub
+
+Private Sub clv1_ItemLongClick(Index As Int, Value As Object)
+	'Type conversion
+	Dim strTemp As String = Value	
+	Dim tagtype As String = strTemp.SubString2(0, 1)	
+	If tagtype <> "H" And tagtype <> "L" Then
+		Return 
+	End If
+	Dim lstMenu As List
+	If tagtype = "H" Then ' e.g. H_1
+		lstMenu.Initialize2(Array As String("show", "hide", "edit", "delete", "cancel"))		
+	End If
+	If tagtype = "L" Then ' e.g. L_2_3
+		lstMenu.Initialize2(Array As String("edit", "delete", "cancel"))
+	End If
+	Dim arrTemp() As String = Regex.Split("\_", strTemp)
+	Select modCommon.popupMenu2(lstMenu)
+		Case "show"
+			' Type conversion
+			Dim headid1 As Int = arrTemp(1)
+			Dim lstTemp As List = objMapOfList.mapOne.Get(headid1)
+			Dim i As Int = 0
+			For i = 0 To lstTemp.Size -1
+				clv1.ResizeItem(Index+i+1, 40dip)
+			Next
+		Case "hide"
+			' Type conversion
+			Dim headid2 As Int = arrTemp(1)
+			Dim lstTemp As List = objMapOfList.mapOne.Get(headid2)
+			Dim j As Int = 0
+			For j = 0 To lstTemp.Size -1
+				clv1.ResizeItem(Index+j+1, 0)
+			Next
+		Case "edit"
+			If tagtype = "H" Then
+				editHead(Index, arrTemp(1))
+				Return
+			End If
+			If tagtype = "L" Then
+				editLine(Index, arrTemp(1), arrTemp(2))
+				Return				
+			End If			
+		Case "delete"			
+			If tagtype = "H" Then
+				objMapOfList.setUIIndex(Index)
+				'arrTemp(1) is header id
+				objMapOfList.DeleteHeader(arrTemp(1))				
+				Return
+			End If
+			If tagtype = "L" Then
+				objMapOfList.setUIIndex(Index)
+				'arrTemp(1) is item's header id
+				'arrTemp(2) is item id
+				objMapOfList.DeleteItem(arrTemp(1), arrTemp(2))				
+				Return
+			End If
+		Case "cancel"
+			Return
+		Case Else
+			Return
+	End Select
+End Sub
+
+Private Sub clv1_VisibleRangeChanged (FirstIndex As Int, LastIndex As Int)
+	Dim ExtraSize As Int = 10
+	
+	For i = 0 To clv1.Size - 1
+		Dim pnl_1 As B4XView = clv1.GetPanel(i)
+		If i > FirstIndex - ExtraSize And i < LastIndex + ExtraSize Then
+			'Visible +
+			If pnl_1.NumberOfViews = 0 Then
+				Dim value() As String = Regex.Split("\_", clv1.GetValue(i))	
+				Dim valOne As Int = value(1)			
+				Select value(0)
+					Case "H"
+						If objMapOfList.mapHeader.ContainsKey(valOne) Then
+							Dim mapEntry1 As Map = objMapOfList.mapHeader.Get(valOne)
+							Dim myTitle As String = mapEntry1.Get("text")
+							EquipHeaderPanel(pnl_1, "HEADER #" & valOne & " " & myTitle)
+						End If						
+					Case "L"						
+						Dim valTwo As Int = value(2)
+						If objMapOfList.mapLine.ContainsKey(valTwo) Then
+							Dim mapEntry2 As Map = objMapOfList.mapLine.Get(valTwo)
+							Dim myQty As Int = mapEntry2.Get("qty")
+							Dim myItem As String = mapEntry2.Get("item")
+							EquipItemPanel(pnl_1, "LINE #" & valTwo & " " & myItem, myQty, 40dip)
+						End If						
+					Case Else
+						Continue
+				End Select				
+			End If
+		End If
+	Next
+End Sub
+
+Sub FillListView()
+	If objMapOfList.IsInitialized = False Then
+		Return
+	End If
+	For Each key_1 As Int In objMapOfList.mapOne.Keys
+		Dim lstTmp As List = objMapOfList.mapOne.Get(key_1)
+		If lstTmp.IsInitialized = False Then
+			Continue
+		End If
+		Dim pnlHead As B4XView = xui.CreatePanel("")
+		pnlHead.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 50dip)
+		pnlHead.SetColorAndBorder(Colors.DarkGray, 3dip, Colors.Yellow, 20dip)
+		pnlHead.Tag = "Header"
+		clv1.Add(pnlHead, "H_" & key_1)
+		For Each entry_1 As Int In lstTmp
+			Dim pnlLine As B4XView = xui.CreatePanel("")
+			pnlLine.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
+			pnlLine.Tag = "Line"			
+			clv1.Add(pnlLine, $"L_${key_1}_${entry_1}"$)
+		Next
+	Next
+End Sub
+
+' Pass panel as Reference
+Sub EquipItemPanel(pItem As Panel, Text As String, Text2 As String, Height As Int) 
+	
+	Dim lbl As Label
+	lbl.Initialize("")
+	lbl.Gravity = Bit.Or(Gravity.CENTER_VERTICAL, Gravity.LEFT)
+	lbl.Text = Text
+	lbl.TextSize = 16
+	lbl.TextColor = Colors.Black	
+	Dim lbl2 As Label
+	lbl2.Initialize("")
+	lbl2.TextSize = 16
+	lbl2.TextColor = Colors.Black
+	lbl2.Text = Text2	
+	pItem.AddView(lbl, 5dip, 2dip, 150dip, Height - 4dip) 'view #0
+	pItem.AddView(lbl2, 280dip, 2dip, 50dip, Height - 4dip) 'view #2
+End Sub
+' Pass panel as Reference
+Sub EquipHeaderPanel(pHeader As Panel, Text As String) 
+	
+	pHeader.Color = Colors.DarkGray	
+	Dim lbl As Label
+	lbl.Initialize("")
+	lbl.Gravity = Bit.Or(Gravity.CENTER_VERTICAL, Gravity.CENTER_HORIZONTAL)
+	lbl.Text = Text
+	lbl.TextSize = 16
+	lbl.Typeface = Typeface.DEFAULT_BOLD
+	lbl.TextColor = Colors.White	
+	pHeader.AddView(lbl, 5dip, 2dip, 320dip, 50dip)
+End Sub
+
+Private Sub sprHead_ItemClick (Position As Int, Value As Object)
+	
+	If Position = sprHead.Size - 1 Then 'new item
+		edtHead.Visible = True
+	Else
+		edtHead.Visible = False		
+	End If
+	edtHead.Text = ""	
+End Sub
