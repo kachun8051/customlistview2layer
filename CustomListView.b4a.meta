@@ -1,11 +1,12 @@
 ﻿ModuleBookmarks0=
 ModuleBookmarks1=
 ModuleBookmarks2=
-ModuleBreakpoints0=
+ModuleBreakpoints0=477
 ModuleBreakpoints1=
 ModuleBreakpoints2=
 ModuleClosedNodes0=
 ModuleClosedNodes1=
 ModuleClosedNodes2=
+NavigationStack=clsMapOfList,DeleteItem,410,0,Main,exchangeLine,262,6,clsMapOfList,getStatus,192,6,Main,UiindexToLineid,477,6,Main,FindNextHeadIndex,511,6,clsMapOfList,collapseHead,118,0,clsMapOfList,exchangeLine,142,6,Main,EventHandler,359,6,Main,FillListView,656,0,Main,ExchangedHandler,486,6
 SelectedBuild=0
 VisibleModules=1,2

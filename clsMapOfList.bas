@@ -11,6 +11,8 @@ Sub Class_Globals
 	Public mapHeader As Map 'ignore '{headerid: {text: text1}}
 	'Contents - map of line to its content
 	Public mapLine As Map 'ignore '{lineid: [{text: text1, qty: qty1}, {text: text2, qty: qty2}, {text: text3, qty: qty3}, ...]}
+	'Hide or Show
+	Public mapShow As Map 
 	'Event and callback
 	Private m_callback As Object
 	Private m_event As String
@@ -23,6 +25,7 @@ Public Sub Initialize(callback As Object, event As String)
 	mapOne.Initialize
 	mapHeader.Initialize
 	mapLine.Initialize
+	mapShow.Initialize
 	m_callback = callback
 	m_event = event
 	m_uiindex = -1
@@ -45,6 +48,9 @@ Public Sub ClearAll()
 	End If
 	If mapLine.IsInitialized Then
 		mapLine.Clear
+	End If
+	If mapShow.IsInitialized Then
+		mapShow.Clear
 	End If
 End Sub
 
@@ -72,6 +78,127 @@ Public Sub getContent(i_value As String) As String
 		Return innermap.Get("item") & "^" & innermap.Get("qty")
 	End If
 	Return ""
+End Sub
+
+Public Sub isHeadExpanded(i_headid As Int) As Boolean
+	If mapShow.IsInitialized = False Then
+		Return False
+	End If
+	If mapShow.ContainsKey(i_headid) = False Then
+		Return False
+	End If
+	If 1 = mapShow.Get(i_headid) Then
+		Return True
+	End If
+	Return False
+End Sub
+
+Public Sub expandHead(i_headid As Int, i_ui As Int) As Boolean
+	If mapShow.IsInitialized = False Or mapOne.IsInitialized = False Then
+		Return False
+	End If
+	If mapShow.ContainsKey(i_headid) = False Or mapOne.ContainsKey(i_headid) = False Then
+		Return False
+	End If	
+	If SubExists(m_callback, m_event) Then
+		mapShow.Put(i_headid, 1)
+		Dim lstLine As List = mapOne.Get(i_headid)
+		CallSubDelayed2(m_callback, m_event, CreateMap("action": "expanded", "uiindex": i_ui, "count": lstLine.size))
+	End If
+	Return True
+End Sub
+
+Public Sub collapseHead(i_headid As Int, i_ui As Int) As Boolean
+	If mapShow.IsInitialized = False Or mapOne.IsInitialized = False Then
+		Return False
+	End If
+	If mapShow.ContainsKey(i_headid) = False Or mapOne.ContainsKey(i_headid) = False Then
+		Return False
+	End If	
+	If SubExists(m_callback, m_event) Then
+		mapShow.Put(i_headid, 0)
+		Dim lstLine As List = mapOne.Get(i_headid)
+		CallSubDelayed2(m_callback, m_event, CreateMap("action": "collapsed", "uiindex": i_ui, "count": lstLine.size))
+	End If
+	Return True
+End Sub
+
+Public Sub exchangeLine(i_oheadid As Int, i_headText As String, i_lineid As Int, i_ui As Int) As Boolean
+	If mapOne.IsInitialized = False Then
+		Return False
+	End If
+	If mapOne.ContainsKey(i_oheadid) = False Then
+		Return False
+	End If
+	Dim isHeadCreated As Boolean = False
+	Dim isHeadDeleted As Boolean = False
+	' Target
+	Dim headid As Int = getHeadIdByText(i_headText)
+	Dim targetcount As Int = 0
+	If headid = -1 Then
+		' Create New head
+		isHeadCreated = True		
+		Dim maxheadkey As Int = getMaxKeyInMap(mapHeader)
+		headid = maxheadkey + 1
+		mapHeader.Put(headid, CreateMap("text": i_headText))
+		mapShow.Put(headid, 1)
+		Dim lst As List : lst.Initialize
+		lst.Add(i_lineid)
+		mapOne.Put(headid, lst)
+		targetcount = 1
+	Else
+		isHeadCreated = False
+		Dim lstTarget As List = mapOne.Get(headid)
+		If lstTarget.IsInitialized = False Then
+			Return False
+		End If
+		lstTarget.Add(i_lineid)
+		targetcount = lstTarget.Size
+	End If
+	' Source
+	Dim lstSource As List = mapOne.Get(i_oheadid)	
+	If lstSource.IsInitialized = False Then
+		Return False
+	End If
+	Dim foundidx As Int = lstSource.IndexOf(i_lineid)
+	If foundidx = -1 Then
+		Return False
+	End If
+	If lstSource.Size = 1 Then
+		' Delete Old head
+		isHeadDeleted = True
+		mapHeader.Remove(i_oheadid)
+		mapShow.Remove(i_oheadid)
+		mapOne.Remove(i_oheadid)
+	Else
+		isHeadDeleted = False
+		lstSource.RemoveAt(foundidx)
+	End If		
+	'lstTarget.Add(i_lineid)
+	If SubExists(m_callback, m_event) Then		
+		CallSubDelayed2(m_callback, m_event, _ 
+			CreateMap("action": "exchanged", _ 
+				"isheadcreated": isHeadCreated, "isheaddeleted": isHeadDeleted, _ 
+				"status": getStatus(isHeadCreated, isHeadDeleted), _ 
+				"uiindex": i_ui, "headid": headid, "count": targetcount))
+	End If
+	Return True
+End Sub
+
+private Sub getStatus(created As Boolean , deleted As Boolean) As Int
+	If created And deleted Then
+		Return 3
+	End If
+	If (created Or deleted) = False Then
+		Return 0
+	End If
+	If created = True And deleted = False Then
+		Return 2
+	End If
+	If created = False And deleted = True Then
+		Return 1
+	End If
+	Return -1
 End Sub
 
 'Public Sub FillTheMap() As Boolean	
@@ -129,6 +256,7 @@ Public Sub FillTheMap2() As Boolean
 				lst.Add(mapEntry.Get("id"))
 			Next
 			mapHeader.Put(intKey, innerMap.Get("head"))
+			mapShow.Put(intKey, 1)
 			mapOne.Put(intKey, lst)
 		Next
 		'LogStructure("mapOne", mapOne)
@@ -161,6 +289,7 @@ Public Sub AddItem(i_map As Map) As Boolean
 			Dim maxheadkey As Int = getMaxKeyInMap(mapHeader)
 			Dim maxlinekey As Int = getMaxKeyInMap(mapLine)
 			mapHeader.Put(maxheadkey + 1, i_map.Get("head"))
+			mapShow.Put(maxheadkey + 1, 1)
 			mapLine.Put(maxlinekey + 1, i_map.Get("line"))
 			Dim lst As List : lst.Initialize
 			lst.Add(maxlinekey + 1)
@@ -283,6 +412,7 @@ Public Sub DeleteHeader(headid As Int) As Boolean
 		End If		
 	Next
 	mapHeader.Remove(headid)
+	mapShow.Remove(headid)
 	mapOne.Remove(headid)	
 	If SubExists(m_callback, m_event) Then
 		CallSubDelayed2(m_callback, m_event, _ 
@@ -313,6 +443,7 @@ Public Sub DeleteItem(headid As Int, lineid As Int) As Boolean
 			mapLine.Remove(lstTmp.Get(0))
 		End If
 		mapHeader.Remove(headid)
+		mapShow.Remove(headid)
 		mapOne.Remove(headid)
 		If SubExists(m_callback, m_event) Then
 			CallSubDelayed2(m_callback, m_event, _ 
