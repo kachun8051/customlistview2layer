@@ -134,7 +134,7 @@ Public Sub exchangeLine(i_oheadid As Int, i_headText As String, i_lineid As Int,
 	Dim isHeadDeleted As Boolean = False
 	' Target
 	Dim headid As Int = getHeadIdByText(i_headText)
-	Dim targetcount As Int = 0
+'	Dim targetcount As Int = 0
 	If headid = -1 Then
 		' Create New head
 		isHeadCreated = True		
@@ -145,7 +145,7 @@ Public Sub exchangeLine(i_oheadid As Int, i_headText As String, i_lineid As Int,
 		Dim lst As List : lst.Initialize
 		lst.Add(i_lineid)
 		mapOne.Put(headid, lst)
-		targetcount = 1
+'		targetcount = 1
 	Else
 		isHeadCreated = False
 		Dim lstTarget As List = mapOne.Get(headid)
@@ -153,7 +153,7 @@ Public Sub exchangeLine(i_oheadid As Int, i_headText As String, i_lineid As Int,
 			Return False
 		End If
 		lstTarget.Add(i_lineid)
-		targetcount = lstTarget.Size
+'		targetcount = lstTarget.Size
 	End If
 	' Source
 	Dim lstSource As List = mapOne.Get(i_oheadid)	
@@ -180,7 +180,7 @@ Public Sub exchangeLine(i_oheadid As Int, i_headText As String, i_lineid As Int,
 			CreateMap("action": "exchanged", _ 
 				"isheadcreated": isHeadCreated, "isheaddeleted": isHeadDeleted, _ 
 				"status": getStatus(isHeadCreated, isHeadDeleted), _ 
-				"uiindex": i_ui, "headid": headid, "count": targetcount))
+				"uiindex": i_ui, "headid": headid))
 	End If
 	Return True
 End Sub

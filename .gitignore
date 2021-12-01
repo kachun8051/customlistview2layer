@@ -4,4 +4,6 @@
 /Objects/res
 /Objects/shell
 /Objects/src
+/Objects/*.dex
+/Objects/*.apk
 /AutoBackups

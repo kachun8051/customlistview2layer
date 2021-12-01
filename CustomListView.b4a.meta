@@ -7,6 +7,6 @@ ModuleBreakpoints2=
 ModuleClosedNodes0=
 ModuleClosedNodes1=
 ModuleClosedNodes2=
-NavigationStack=clsMapOfList,DeleteItem,410,0,Main,exchangeLine,262,6,clsMapOfList,getStatus,192,6,Main,UiindexToLineid,477,6,Main,FindNextHeadIndex,511,6,clsMapOfList,collapseHead,118,0,clsMapOfList,exchangeLine,142,6,Main,EventHandler,359,6,Main,FillListView,656,0,Main,ExchangedHandler,486,6
+NavigationStack=Main,Activity_Resume,52,0,Main,clv1_ItemClick,575,6,Main,LogIfIndexOutOfBound,758,6,Main,sprHead_ItemClick,742,0,Main,UiindexToLineid,542,6,Main,FindNextHeadIndex,567,6,Main,EventHandler,337,6,Main,clv1_VisibleRangeChanged,655,6,clsMapOfList,Class_Globals,0,0,Main,ExchangedHandler,389,6
 SelectedBuild=0
 VisibleModules=1,2

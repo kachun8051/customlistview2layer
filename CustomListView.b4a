@@ -322,92 +322,100 @@ Private Sub EventHandler(mapRes As Map) 'ignore
 	End If
 	If mapRes.ContainsKey("lineid") Then
 		lineid = mapRes.Get("lineid")
-	End If	
-	Select action
-		Case "filled"
-			FillListView
-		Case "headdeleted"			
-			Dim j As Int = 0
-			' First, delete all children
-			For j = count -1 To 0 Step -1
-				Dim temp As String = clv1.GetValue(uiindex + j + 1)
-				LogColor(temp, Colors.Blue)
-				clv1.RemoveAt(uiindex + j + 1)
-			Next
-			' Second, delete the parent
-			clv1.RemoveAt(uiindex)
-			clv1.Refresh
-		Case "linedeleted"
-			LogColor(clv1.GetValue(uiindex), Colors.Blue)
-			clv1.RemoveAt(uiindex)
-			clv1.Refresh
-		Case "headadded"
-			If headid = -1 Or lineid = -1 Then
-				Return
-			End If
-			Dim pnlHead As B4XView = xui.CreatePanel("")
-			pnlHead.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 50dip)
-			pnlHead.SetColorAndBorder(Colors.DarkGray, 3dip, Colors.Yellow, 20dip)
-			pnlHead.Tag = "Header"
-			clv1.Add(pnlHead, "H_" & headid)
-			Dim pnlLine As B4XView = xui.CreatePanel("")
-			pnlLine.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
-			pnlLine.Tag = "Line"
-			clv1.Add(pnlLine, $"L_${headid}_${lineid}"$)
-			timer.Enabled = True
-			Wait For timer_tick
-			timer.Enabled = False
-			clv1.JumpToItem(clv1.Size-1)
-		Case "lineadded"
-			If headid = -1 Or lineid = -1 Then
-				Return
-			End If
-			Dim pnlLine_1 As B4XView = xui.CreatePanel("")
-			pnlLine_1.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
-			pnlLine_1.Tag = "Line"			
-			Dim nextheadid As Int = FindNextHeadIndex(headid)			
-			If nextheadid = -1 Then
-				' No next head 
-				clv1.Add(pnlLine_1, $"L_${headid}_${lineid}"$)
+	End If
+	Try
+		Select action
+			Case "filled"
+				FillListView
+			Case "headdeleted"
+				Dim j As Int = 0
+				' First, delete all children
+				For j = count -1 To 0 Step -1
+					Dim temp As String = clv1.GetValue(uiindex + j + 1)
+					LogColor(temp, Colors.Blue)
+					clv1.RemoveAt(uiindex + j + 1)
+				Next
+				' Second, delete the parent
+				clv1.RemoveAt(uiindex)
+				clv1.Refresh
+			Case "linedeleted"
+				LogColor(clv1.GetValue(uiindex), Colors.Blue)
+				clv1.RemoveAt(uiindex)
+				clv1.Refresh
+			Case "headadded"
+				If headid = -1 Or lineid = -1 Then
+					Return
+				End If
+				Dim pnlHead As B4XView = xui.CreatePanel("")
+				pnlHead.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 50dip)
+				pnlHead.SetColorAndBorder(Colors.DarkGray, 3dip, Colors.Yellow, 20dip)
+				pnlHead.Tag = "Header"
+				clv1.Add(pnlHead, "H_" & headid)
+				Dim pnlLine As B4XView = xui.CreatePanel("")
+				pnlLine.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
+				pnlLine.Tag = "Line"
+				clv1.Add(pnlLine, $"L_${headid}_${lineid}"$)
 				timer.Enabled = True
 				Wait For timer_tick
 				timer.Enabled = False
 				clv1.JumpToItem(clv1.Size-1)
-			Else
-				clv1.InsertAt(nextheadid, pnlLine_1, $"L_${headid}_${lineid}"$)
-				timer.Enabled = True
-				Wait For timer_tick
-				timer.Enabled = False
-				clv1.JumpToItem(nextheadid)
-			End If		
-			clv1.Refresh	
-		Case "exchanged"
-			'Dim pnltmp As B4XView = clv1.GetPanel(uiindex)
-			ExchangedHandler(mapRes)
-		Case "headedited"	
-			Dim pnlHead As B4XView = xui.CreatePanel("")
-			pnlHead.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 50dip)
-			pnlHead.SetColorAndBorder(Colors.DarkGray, 3dip, Colors.Yellow, 20dip)
-			pnlHead.Tag = "Header"
-			clv1.ReplaceAt(uiindex, pnlHead, 50dip, "H_" & headid)
-			clv1.Refresh
-		Case "lineedited"
-			Dim pnlLine_2 As B4XView = xui.CreatePanel("")
-			pnlLine_2.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
-			pnlLine_2.Tag = "Line"
-			clv1.ReplaceAt(uiindex, pnlLine_2, 40dip, $"L_${headid}_${lineid}"$) 
-			clv1.Refresh
-		Case "collapsed"
-			Dim i As Int = 0
-			For i = 0 To count -1
-				clv1.ResizeItem(uiindex+i+1, 0dip)
-			Next
-		Case "expanded"
-			Dim j As Int = 0
-			For j = 0 To count -1
-				clv1.ResizeItem(uiindex+j+1, 40dip)
-			Next
-	End Select
+			Case "lineadded"
+				If headid = -1 Or lineid = -1 Then
+					Return
+				End If
+				Dim pnlLine_1 As B4XView = xui.CreatePanel("")
+				pnlLine_1.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
+				pnlLine_1.Tag = "Line"
+				Dim nextheadid As Int = FindNextHeadIndex(headid)
+				If nextheadid = -1 Or nextheadid = clv1.Size Then
+					' No next head
+					clv1.Add(pnlLine_1, $"L_${headid}_${lineid}"$)
+					timer.Enabled = True
+					Wait For timer_tick
+					timer.Enabled = False
+					clv1.JumpToItem(clv1.Size-1)
+				Else
+					clv1.InsertAt(nextheadid, pnlLine_1, $"L_${headid}_${lineid}"$)
+					timer.Enabled = True
+					Wait For timer_tick
+					timer.Enabled = False
+					If nextheadid = clv1.Size Then
+						nextheadid = clv1.Size -1
+					End If
+					clv1.JumpToItem(nextheadid)
+				End If
+				clv1.Refresh
+			Case "exchanged"
+				'Dim pnltmp As B4XView = clv1.GetPanel(uiindex)
+				ExchangedHandler(mapRes)
+			Case "headedited"
+				Dim pnlHead As B4XView = xui.CreatePanel("")
+				pnlHead.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 50dip)
+				pnlHead.SetColorAndBorder(Colors.DarkGray, 3dip, Colors.Yellow, 20dip)
+				pnlHead.Tag = "Header"
+				clv1.ReplaceAt(uiindex, pnlHead, 50dip, "H_" & headid)
+				clv1.Refresh
+			Case "lineedited"
+				Dim pnlLine_2 As B4XView = xui.CreatePanel("")
+				pnlLine_2.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
+				pnlLine_2.Tag = "Line"
+				clv1.ReplaceAt(uiindex, pnlLine_2, 40dip, $"L_${headid}_${lineid}"$)
+				clv1.Refresh
+			Case "collapsed"
+				Dim i As Int = 0
+				For i = 0 To count -1
+					clv1.ResizeItem(uiindex+i+1, 0dip)
+				Next
+			Case "expanded"
+				Dim j As Int = 0
+				For j = 0 To count -1
+					clv1.ResizeItem(uiindex+j+1, 40dip)
+				Next
+		End Select
+	Catch
+		LogColor("EventHandler (" & action & "): " & CRLF & LastException, Colors.Red)
+	End Try
+	
 End Sub
 
 Private Sub ExchangedHandler(i_mapRes As Map)
@@ -415,120 +423,148 @@ Private Sub ExchangedHandler(i_mapRes As Map)
 	If i_mapRes.ContainsKey("headid") Then
 		headid = i_mapRes.Get("headid")
 	End If
-'	Dim lineid As Int = -1
-'	If i_mapRes.ContainsKey("lineid") Then
-'		lineid = i_mapRes.Get("lineid")
-'	End If	
-'	Dim count As Int = -1
-'	If i_mapRes.ContainsKey("count") Then
-'		count = i_mapRes.Get("count")
-'	End If
 	Dim uiindex As Int = -1
 	If i_mapRes.ContainsKey("uiindex") Then
 		uiindex = i_mapRes.Get("uiindex")
 	End If
-	Select i_mapRes.Get("status")
-		Case 0 '轉入、轉出
-			Dim pnlLine As B4XView = xui.CreatePanel("")
-			pnlLine.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
-			pnlLine.Tag = "Line"
-			'the lineid of value is kept and transfered			
-			Dim originalLineid As Int = UiindexToLineid(uiindex)
-			If originalLineid = -1 Then
-				Return
-			End If
-			Dim value As String = $"L_${headid}_${originalLineid}"$
-			Dim nextheadid As Int = FindNextHeadIndex(headid)
-			If nextheadid = -1 Then
-				'No next head				
-				clv1.Add(pnlLine, value)
-			Else
-				'Must Insert before remove otherwise the index would be incorrect
-				clv1.InsertAt(nextheadid, pnlLine, value)
-			End If
-			clv1.RemoveAt(uiindex)
-			clv1.Refresh
-			timer.Enabled = True
-			Wait For timer_tick
-			timer.Enabled = False
-			If nextheadid = clv1.Size Then
-				nextheadid = clv1.Size - 1
-			End If
-			clv1.JumpToItem(nextheadid)
-		Case 1 '轉入、刪除
-			Dim pnlLine_1 As B4XView = xui.CreatePanel("")
-			pnlLine_1.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
-			pnlLine_1.Tag = "Line"
-			'the lineid of value is kept and transfered
-			Dim originalLineid_1 As Int = UiindexToLineid(uiindex)
-			If originalLineid_1 = -1 Then
-				Return
-			End If
-			Dim value_1 As String =  $"L_${headid}_${originalLineid_1}"$
-			Dim nextheadid_1 As Int = FindNextHeadIndex(headid)
-			If nextheadid_1 = -1 Then
-				'No next head			
-				clv1.Add(pnlLine_1, value_1)
-			Else
-				'Must Insert before remove otherwise the index would be incorrect
-				clv1.InsertAt(nextheadid_1, pnlLine_1, value_1)
-			End If			
-			clv1.RemoveAt(uiindex) 	 ' remove line
-			clv1.RemoveAt(uiindex-1) ' remove head			
-			clv1.Refresh
-			timer.Enabled = True
-			Wait For timer_tick
-			timer.Enabled = False
-			If nextheadid_1 = clv1.Size Then
-				nextheadid_1 = clv1.Size -1
-			End If
-			clv1.JumpToItem(nextheadid_1)
-		Case 2 '新增、轉出
-			Dim pnlHead_2 As B4XView = xui.CreatePanel("")
-			pnlHead_2.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 50dip)
-			pnlHead_2.SetColorAndBorder(Colors.DarkGray, 3dip, Colors.Yellow, 20dip)
-			pnlHead_2.Tag = "Header"
-			'the lineid of value is kept and transfered
-			Dim originalLineid_2 As Int = UiindexToLineid(uiindex)
-			If originalLineid_2 = -1 Then
-				Return
-			End If
-			Dim value_2 As String = $"L_${headid}_${originalLineid_2}"$			
-			clv1.Add(pnlHead_2, "H_" & headid)
-			Dim pnlLine_2 As B4XView = xui.CreatePanel("")
-			pnlLine_2.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)			
-			pnlLine_2.Tag = "Line"			
-			clv1.Add(pnlLine_2, value_2)
-			clv1.RemoveAt(uiindex) 	 ' remove line
-			timer.Enabled = True
-			Wait For timer_tick
-			timer.Enabled = False
-			clv1.JumpToItem(clv1.Size-1)
-		Case 3 '新增、刪除
-			Dim pnlHead_3 As B4XView = xui.CreatePanel("")
-			pnlHead_3.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 50dip)
-			pnlHead_3.SetColorAndBorder(Colors.DarkGray, 3dip, Colors.Yellow, 20dip)
-			pnlHead_3.Tag = "Header"
-			'the lineid of value is kept and transfered
-			Dim originalLineid_3 As Int = UiindexToLineid(uiindex)
-			If originalLineid_3 = -1 Then
-				Return
-			End If
-			Dim value_3 As String = $"L_${headid}_${originalLineid_3}"$
-			clv1.Add(pnlHead_3, "H_" & headid)
-			Dim pnlLine_3 As B4XView = xui.CreatePanel("")
-			pnlLine_3.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
-			pnlLine_3.Tag = "Line"
-			clv1.Add(pnlLine_3, value_3)
-			clv1.RemoveAt(uiindex) 	 ' remove line
-			clv1.RemoveAt(uiindex-1) ' remove head
-			timer.Enabled = True
-			Wait For timer_tick
-			timer.Enabled = False
-			clv1.JumpToItem(clv1.Size-1)
-		Case Else
+	Try
+		Select i_mapRes.Get("status")
+			Case 0 ' Transfer in, Transfer out
+				Dim pnlLine As B4XView = xui.CreatePanel("")
+				pnlLine.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
+				pnlLine.Tag = "Line"
+				'the lineid of value is kept and transfered
+				Dim originalLineid As Int = UiindexToLineid(uiindex)
+				If originalLineid = -1 Then
+					Return
+				End If
+				Dim value As String = $"L_${headid}_${originalLineid}"$
+				Dim nextheadid As Int = FindNextHeadIndex(headid)
+				If nextheadid = -1 Or nextheadid = clv1.Size Then
+					'No next head
+					clv1.Add(pnlLine, value)
+					LogIfIndexOutOfBound(415, uiindex)
+					clv1.RemoveAt(uiindex)
+				Else			
+					If nextheadid < uiindex Then ' The larger index do first
+						LogIfIndexOutOfBound(419, uiindex)
+						clv1.RemoveAt(uiindex)
+						LogIfIndexOutOfBound(421, nextheadid)
+						clv1.InsertAt(nextheadid, pnlLine, value)
+					Else
+						LogIfIndexOutOfBound(424, nextheadid)						
+						clv1.InsertAt(nextheadid, pnlLine, value)						
+						LogIfIndexOutOfBound(426, uiindex)
+						clv1.RemoveAt(uiindex)
+					End If					
+				End If				
+				clv1.Refresh
+				timer.Enabled = True
+				Wait For timer_tick
+				timer.Enabled = False
+				If nextheadid = -1 Or nextheadid = clv1.Size Then
+					nextheadid = clv1.Size - 1
+				End If
+				clv1.JumpToItem(nextheadid)
+			Case 1 ' Transfer in, delete
+				Dim pnlLine_1 As B4XView = xui.CreatePanel("")
+				pnlLine_1.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
+				pnlLine_1.Tag = "Line"
+				'the lineid of value is kept and transfered
+				Dim originalLineid_1 As Int = UiindexToLineid(uiindex)
+				If originalLineid_1 = -1 Then
+					Return
+				End If
+				Dim value_1 As String =  $"L_${headid}_${originalLineid_1}"$
+				Dim nextheadid_1 As Int = FindNextHeadIndex(headid)
+				If nextheadid_1 = -1 Or nextheadid_1 = clv1.Size Then
+					'No next head
+					clv1.Add(pnlLine_1, value_1)
+					LogIfIndexOutOfBound(452, uiindex)
+					clv1.RemoveAt(uiindex) 	 ' remove line
+					LogIfIndexOutOfBound(454, uiindex)
+					clv1.RemoveAt(uiindex-1) ' remove head
+				Else
+					If nextheadid_1 < uiindex Then ' The larger index do first
+						LogIfIndexOutOfBound(458, uiindex)
+						clv1.RemoveAt(uiindex) 	 ' remove line
+						LogIfIndexOutOfBound(460, uiindex-1)
+						clv1.RemoveAt(uiindex-1) ' remove head
+						LogIfIndexOutOfBound(462, nextheadid_1)
+						clv1.InsertAt(nextheadid_1, pnlLine_1, value_1)
+					Else
+						LogIfIndexOutOfBound(465, nextheadid_1)
+						clv1.InsertAt(nextheadid_1, pnlLine_1, value_1)
+						LogIfIndexOutOfBound(467, uiindex)
+						clv1.RemoveAt(uiindex) 	 ' remove line
+						LogIfIndexOutOfBound(469, uiindex-1)
+						clv1.RemoveAt(uiindex-1) ' remove head
+					End If
+				End If				
+				clv1.Refresh
+				timer.Enabled = True
+				Wait For timer_tick
+				timer.Enabled = False
+				If nextheadid_1 = -1 Or nextheadid_1 = clv1.Size Then
+					nextheadid_1 = clv1.Size -1
+				End If
+				clv1.JumpToItem(nextheadid_1)
+			Case 2 ' insert, transfer out
+				Dim pnlHead_2 As B4XView = xui.CreatePanel("")
+				pnlHead_2.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 50dip)
+				pnlHead_2.SetColorAndBorder(Colors.DarkGray, 3dip, Colors.Yellow, 20dip)
+				pnlHead_2.Tag = "Header"
+				'the lineid of value is kept and transfered
+				Dim originalLineid_2 As Int = UiindexToLineid(uiindex)
+				If originalLineid_2 = -1 Then
+					Return
+				End If
+				Dim value_2 As String = $"L_${headid}_${originalLineid_2}"$
+				clv1.Add(pnlHead_2, "H_" & headid)
+				Dim pnlLine_2 As B4XView = xui.CreatePanel("")
+				pnlLine_2.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
+				pnlLine_2.Tag = "Line"
+				' Must add before delete
+				clv1.Add(pnlLine_2, value_2)
+				LogIfIndexOutOfBound(498, uiindex)
+				clv1.RemoveAt(uiindex) 	 ' remove line
+				timer.Enabled = True
+				Wait For timer_tick
+				timer.Enabled = False
+				clv1.JumpToItem(clv1.Size-1)
+			Case 3 ' insert, delete
+				Dim pnlHead_3 As B4XView = xui.CreatePanel("")
+				pnlHead_3.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 50dip)
+				pnlHead_3.SetColorAndBorder(Colors.DarkGray, 3dip, Colors.Yellow, 20dip)
+				pnlHead_3.Tag = "Header"
+				'the lineid of value is kept and transfered
+				Dim originalLineid_3 As Int = UiindexToLineid(uiindex)
+				If originalLineid_3 = -1 Then
+					Return
+				End If
+				Dim value_3 As String = $"L_${headid}_${originalLineid_3}"$
+				clv1.Add(pnlHead_3, "H_" & headid)
+				Dim pnlLine_3 As B4XView = xui.CreatePanel("")
+				pnlLine_3.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
+				pnlLine_3.Tag = "Line"
+				' Must add before delete 
+				clv1.Add(pnlLine_3, value_3)
+				LogIfIndexOutOfBound(521, uiindex)
+				clv1.RemoveAt(uiindex) 	 ' remove line
+				LogIfIndexOutOfBound(523, uiindex-1)
+				clv1.RemoveAt(uiindex-1) ' remove head
+				timer.Enabled = True
+				Wait For timer_tick
+				timer.Enabled = False
+				clv1.JumpToItem(clv1.Size-1)
+			Case Else
 					
-	End Select
+		End Select
+	Catch
+		Dim errmsg As String = "ExchangedHandler: " & LastException.Message
+		LogColor(errmsg, Colors.red)
+		ToastMessageShow(errmsg, True)
+	End Try	
 End Sub
 
 Private Sub UiindexToLineid(uiindex As Int) As Int
@@ -541,23 +577,27 @@ Private Sub UiindexToLineid(uiindex As Int) As Int
 End Sub
 
 Private Sub FindNextHeadIndex(headid As Int) As Int
-	Dim i As Int = -1
+	Dim idx_1 As Int = -1
+	Dim i As Int = 0
 	For i = 0 To clv1.Size-1
 		If clv1.GetValue(i) = "H_" & headid Then
+			idx_1 = i
 			Exit
 		End If
 	Next
-	If i = -1 Then
+	If idx_1 = -1 Then
 		Return -1
 	End If
-	Dim j As Int = -1
-	For j = i+1 To clv1.Size -1
+	Dim idx_2 As Int = -1
+	Dim j As Int = 0
+	For j = idx_1 + 1 To clv1.Size -1
 		Dim tempvalue As String = clv1.GetValue(j)
 		If tempvalue.SubString2(0, 1) = "H" Then
+			idx_2 = j
 			Exit
 		End If
 	Next
-	Return j
+	Return idx_2
 End Sub
 
 Private Sub clv1_ItemClick (Index As Int, Value As Object)	
@@ -567,14 +607,14 @@ Private Sub clv1_ItemClick (Index As Int, Value As Object)
 	Dim str As String = objMapOfList.getContent(Value)
 	If str.IndexOf("^") = -1 Then
 		Dim msg As String = $"Index: ${Index}${CRLF}Value: ${Value}${CRLF}Text: ${str}"$ 
-		Log("ItemClick (Head) - " & CRLF & msg)
+		Log("ItemClick (Head) - " & CRLF & msg.Replace(CRLF, "; "))
 		Msgbox2Async(msg, "Head Info", "OK", "", "", Null, True)
 		Return
 	End If
 	Dim arr() As String = Regex.Split("\^", str)
 	If arr.Length = 2 Then
 		Dim msg1 As String = $"Index: ${Index}${CRLF}Value: ${Value}${CRLF}Item: ${arr(0)}${CRLF}Qty: ${arr(1)}"$
-		Log("ItemClick (Line) - " & CRLF & msg)
+		Log("ItemClick (Line) - " & CRLF & msg1.Replace(CRLF, "; "))
 		Msgbox2Async(msg1, "Line Info", "OK", "", "", Null, True)
 		Return
 	End If
@@ -641,7 +681,7 @@ Private Sub clv1_ItemLongClick(Index As Int, Value As Object)
 End Sub
 
 Private Sub clv1_VisibleRangeChanged (FirstIndex As Int, LastIndex As Int)
-	Dim ExtraSize As Int = 10
+	Dim ExtraSize As Int = 15 'Extra Size MUST cover the whole screen + extra 2 rows in case of head add or exchange
 	
 	For i = 0 To clv1.Size - 1
 		Dim pnl_1 As B4XView = clv1.GetPanel(i)
@@ -740,4 +780,17 @@ Private Sub sprHead_ItemClick (Position As Int, Value As Object)
 	edtHead.Text = ""
 	edtHead.RequestFocus
 	edtHead.SelectAll	
+End Sub
+
+Private Sub LogIfIndexOutOfBound(whichline As Int, idx As Int)
+	If clv1.IsInitialized = False Then
+		Return
+	End If
+	If idx >= clv1.Size Then
+		Dim err As String = "Which line: " & whichline & CRLF & _
+			"Index: " & idx & CRLF & _
+			"clv1 size: " & clv1.Size
+		LogColor(err, Colors.Red)
+		Msgbox2Async(err, "IndexOutOfBound", "OK", "", "", Null, True)
+	End If
 End Sub
