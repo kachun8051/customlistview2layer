@@ -747,6 +747,7 @@ Sub EquipItemPanel(pItem As Panel, Text As String, Text2 As String, Height As In
 	lbl.TextColor = Colors.Black	
 	Dim lbl2 As Label
 	lbl2.Initialize("")
+	lbl2.Gravity = Bit.Or(Gravity.CENTER_VERTICAL, Gravity.LEFT)
 	lbl2.TextSize = 16
 	lbl2.TextColor = Colors.Black
 	lbl2.Text = Text2	
@@ -792,5 +793,14 @@ Private Sub LogIfIndexOutOfBound(whichline As Int, idx As Int)
 			"clv1 size: " & clv1.Size
 		LogColor(err, Colors.Red)
 		Msgbox2Async(err, "IndexOutOfBound", "OK", "", "", Null, True)
+	End If
+End Sub
+
+Private Sub edtQty_FocusChanged (HasFocus As Boolean)
+	If HasFocus Then
+		timer.Enabled = True
+		Wait For timer_tick
+		timer.Enabled = False
+		edtQty.SelectAll
 	End If
 End Sub
