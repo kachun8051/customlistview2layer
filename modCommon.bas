@@ -26,3 +26,11 @@ Public Sub popupMenu2(iList As List) As String
 		Return ""
 	End If
 End Sub
+
+'https://apps.timwhitlock.info/emoji/tables/unicode
+'This UTS function is emoji converter
+Public Sub UTS (codepoint As Int) As String
+	Dim bc As ByteConverter
+	Dim b() As Byte = bc.IntsToBytes(Array As Int(codepoint))
+	Return BytesToString(b, 0, 4, "UTF32")
+End Sub

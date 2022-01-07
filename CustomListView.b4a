@@ -15,17 +15,18 @@ FileGroup6=Default Group
 FileGroup7=Default Group
 Group=Default Group
 Library1=core
-Library2=json
-Library3=stringutils
-Library4=xcustomlistview
-Library5=xui
-Library6=xui views
-Library7=inputmenu
+Library2=inputmenu
+Library3=json
+Library4=stringutils
+Library5=xcustomlistview
+Library6=xui
+Library7=xui views
+Library8=byteconverter
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="4" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
 Module1=clsMapOfList
 Module2=modCommon
 NumberOfFiles=7
-NumberOfLibraries=7
+NumberOfLibraries=8
 NumberOfModules=2
 Version=11
 @EndOfDesignText@
@@ -82,12 +83,13 @@ Sub Activity_Create(FirstTime As Boolean)
 End Sub
 
 Sub Activity_Resume
-	If clv1.IsInitialized Then
-		clv1.clear
-	End If
-	If objMapOfList.IsInitialized And objMapOfList.Size = 0 Then
-		objMapOfList.FillTheMap2
-	End If
+'	If clv1.IsInitialized Then
+'		clv1.clear
+'	End If
+'	If objMapOfList.IsInitialized And objMapOfList.Size = 0 Then
+'		objMapOfList.FillTheMap2
+'	End If
+	reset_click
 End Sub
 
 Sub Activity_Pause (UserClosed As Boolean)
@@ -406,11 +408,25 @@ Private Sub EventHandler(mapRes As Map) 'ignore
 				For i = 0 To count -1
 					clv1.ResizeItem(uiindex+i+1, 0dip)
 				Next
+				'refresh the head
+				Dim pnlHead_1 As B4XView = xui.CreatePanel("")
+				pnlHead_1.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 50dip)
+				pnlHead_1.SetColorAndBorder(Colors.DarkGray, 3dip, Colors.Yellow, 20dip)
+				pnlHead_1.Tag = "Header"
+				clv1.ReplaceAt(uiindex, pnlHead_1, 50dip, "H_" & headid)
+				clv1.Refresh
 			Case "expanded"
 				Dim j As Int = 0
 				For j = 0 To count -1
 					clv1.ResizeItem(uiindex+j+1, 40dip)
 				Next
+				'refresh the head
+				Dim pnlHead_2 As B4XView = xui.CreatePanel("")
+				pnlHead_2.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 50dip)
+				pnlHead_2.SetColorAndBorder(Colors.DarkGray, 3dip, Colors.Yellow, 20dip)
+				pnlHead_2.Tag = "Header"
+				clv1.ReplaceAt(uiindex, pnlHead_2, 50dip, "H_" & headid)
+				clv1.Refresh
 		End Select
 	Catch
 		LogColor("EventHandler (" & action & "): " & CRLF & LastException, Colors.Red)
@@ -542,17 +558,25 @@ Private Sub ExchangedHandler(i_mapRes As Map)
 				If originalLineid_3 = -1 Then
 					Return
 				End If
-				Dim value_3 As String = $"L_${headid}_${originalLineid_3}"$
-				clv1.Add(pnlHead_3, "H_" & headid)
+				Dim value_3 As String = $"L_${headid}_${originalLineid_3}"$				
 				Dim pnlLine_3 As B4XView = xui.CreatePanel("")
 				pnlLine_3.SetLayoutAnimated(0, 0, 0, clv1.AsView.Width, 40dip)
-				pnlLine_3.Tag = "Line"
-				' Must add before delete 
-				clv1.Add(pnlLine_3, value_3)
-				LogIfIndexOutOfBound(521, uiindex)
-				clv1.RemoveAt(uiindex) 	 ' remove line
-				LogIfIndexOutOfBound(523, uiindex-1)
-				clv1.RemoveAt(uiindex-1) ' remove head
+				pnlLine_3.Tag = "Line"				
+				If uiindex = clv1.Size -1 Then
+					' replace header one for one
+					clv1.ReplaceAt(uiindex-1, pnlHead_3, 50dip, "H_" & headid)
+					' replace line one for one
+					clv1.ReplaceAt(uiindex, pnlLine_3, 40dip, value_3)
+					clv1.Refresh
+				Else
+					' Must add before delete
+					clv1.Add(pnlHead_3, "H_" & headid)					
+					clv1.Add(pnlLine_3, value_3)
+					LogIfIndexOutOfBound(521, uiindex)
+					clv1.RemoveAt(uiindex) 	 ' remove line
+					LogIfIndexOutOfBound(523, uiindex-1)
+					clv1.RemoveAt(uiindex-1) ' remove head
+				End If
 				timer.Enabled = True
 				Wait For timer_tick
 				timer.Enabled = False
@@ -606,9 +630,18 @@ Private Sub clv1_ItemClick (Index As Int, Value As Object)
 	End If
 	Dim str As String = objMapOfList.getContent(Value)
 	If str.IndexOf("^") = -1 Then
-		Dim msg As String = $"Index: ${Index}${CRLF}Value: ${Value}${CRLF}Text: ${str}"$ 
-		Log("ItemClick (Head) - " & CRLF & msg.Replace(CRLF, "; "))
-		Msgbox2Async(msg, "Head Info", "OK", "", "", Null, True)
+'		Dim msg As String = $"Index: ${Index}${CRLF}Value: ${Value}${CRLF}Text: ${str}"$ 
+'		Log("ItemClick (Head) - " & CRLF & msg.Replace(CRLF, "; "))
+'		Msgbox2Async(msg, "Head Info", "OK", "", "", Null, True)
+		Dim arrH() As String = Regex.Split("\_", Value)
+		Dim head_id As Int = arrH(1)
+		If objMapOfList.isHeadExpanded(head_id) Then
+			objMapOfList.collapseHead(head_id, Index)
+			'clv1.refresh
+		Else
+			objMapOfList.expandHead(head_id, Index)
+			'clv1.Refresh
+		End If
 		Return
 	End If
 	Dim arr() As String = Regex.Split("\^", str)
@@ -633,21 +666,27 @@ Private Sub clv1_ItemLongClick(Index As Int, Value As Object)
 	Dim head_id As Int = arrTemp(1)
 	Dim lstMenu As List
 	If tagtype = "H" Then ' e.g. H_1		
-		If objMapOfList.isHeadExpanded(head_id) Then
-			lstMenu.Initialize2(Array As String("collapse", "edit", "delete", "cancel"))
-		Else
-			lstMenu.Initialize2(Array As String("expand", "edit", "delete", "cancel"))
-		End If		
+'		If objMapOfList.isHeadExpanded(head_id) Then
+'			lstMenu.Initialize2(Array As String("collapse", "edit", "delete", "cancel"))
+'		Else
+'			lstMenu.Initialize2(Array As String("expand", "edit", "delete", "cancel"))
+'		End If		
+		lstMenu.Initialize2(Array As String("headinfo", "edit", "delete", "cancel"))
 	End If
 	If tagtype = "L" Then ' e.g. L_2_3
 		lstMenu.Initialize2(Array As String("edit", "delete", "exchange", "cancel"))
 	End If
 	
 	Select modCommon.popupMenu2(lstMenu)
-		Case "expand"
-			objMapOfList.expandHead(head_id, Index)			
-		Case "collapse"
-			objMapOfList.collapseHead(head_id, Index)
+'		Case "expand"
+'			objMapOfList.expandHead(head_id, Index)			
+'		Case "collapse"
+'			objMapOfList.collapseHead(head_id, Index)
+		Case "headinfo"
+			Dim str As String = objMapOfList.getContent(Value)
+			Dim msg As String = $"Index: ${Index}${CRLF}Value: ${Value}${CRLF}Text: ${str}"$
+			Log("ItemClick (Head) - " & CRLF & msg.Replace(CRLF, "; "))
+			Msgbox2Async(msg, "Head Info", "OK", "", "", Null, True)
 		Case "edit"
 			If tagtype = "H" Then
 				editHead(Index, arrTemp(1))
@@ -682,7 +721,7 @@ End Sub
 
 Private Sub clv1_VisibleRangeChanged (FirstIndex As Int, LastIndex As Int)
 	Dim ExtraSize As Int = 15 'Extra Size MUST cover the whole screen + extra 2 rows in case of head add or exchange
-	
+	Log("clv1_VisibleRangeChanged: " & CRLF & "first index: " & FirstIndex & CRLF & "last index: " & LastIndex)
 	For i = 0 To clv1.Size - 1
 		Dim pnl_1 As B4XView = clv1.GetPanel(i)
 		If i > FirstIndex - ExtraSize And i < LastIndex + ExtraSize Then
@@ -695,7 +734,12 @@ Private Sub clv1_VisibleRangeChanged (FirstIndex As Int, LastIndex As Int)
 						If objMapOfList.mapHeader.ContainsKey(valOne) Then
 							Dim mapEntry1 As Map = objMapOfList.mapHeader.Get(valOne)
 							Dim myTitle As String = mapEntry1.Get("text")
-							EquipHeaderPanel(pnl_1, "HEADER #" & valOne & " " & myTitle)
+							Dim isExpanded As Boolean = False
+							If objMapOfList.IsInitialized Then
+								isExpanded = objMapOfList.isHeadExpanded(valOne)
+							End If							
+							EquipHeaderPanel(pnl_1, "HEADER #" & valOne & " " & myTitle, isExpanded)
+							Log("Header Panel is equipped.")
 						End If						
 					Case "L"						
 						Dim valTwo As Int = value(2)
@@ -704,6 +748,7 @@ Private Sub clv1_VisibleRangeChanged (FirstIndex As Int, LastIndex As Int)
 							Dim myQty As Int = mapEntry2.Get("qty")
 							Dim myItem As String = mapEntry2.Get("item")
 							EquipItemPanel(pnl_1, "LINE #" & valTwo & " " & myItem, myQty, 40dip)
+							Log("Item Panel is equipped.")
 						End If						
 					Case Else
 						Continue
@@ -755,17 +800,24 @@ Sub EquipItemPanel(pItem As Panel, Text As String, Text2 As String, Height As In
 	pItem.AddView(lbl2, 280dip, 2dip, 50dip, Height - 4dip) 'view #2
 End Sub
 ' Pass panel as Reference
-Sub EquipHeaderPanel(pHeader As Panel, Text As String) 
+Sub EquipHeaderPanel(pHeader As Panel, Text As String, isExpanded As Boolean) 
 	
 	pHeader.Color = Colors.DarkGray	
-	Dim lbl As Label
-	lbl.Initialize("")
+	Dim lbl As Label : lbl.Initialize("")
 	lbl.Gravity = Bit.Or(Gravity.CENTER_VERTICAL, Gravity.CENTER_HORIZONTAL)
 	lbl.Text = Text
 	lbl.TextSize = 16
 	lbl.Typeface = Typeface.DEFAULT_BOLD
 	lbl.TextColor = Colors.White	
+	Dim lbl1 As Label : lbl1.Initialize("")
+	lbl1.Gravity = Bit.Or(Gravity.CENTER_VERTICAL, Gravity.RIGHT)
+	If isExpanded Then
+		lbl1.Text = modCommon.UTS(0x1F53A) ' ^
+	Else
+		lbl1.Text = modCommon.UTS(0x1F53B) ' v
+	End If
 	pHeader.AddView(lbl, 5dip, 2dip, 320dip, 50dip)
+	pHeader.AddView(lbl1, 280dip, 2dip, 20dip, 50dip)
 End Sub
 
 Private Sub sprHead_ItemClick (Position As Int, Value As Object)

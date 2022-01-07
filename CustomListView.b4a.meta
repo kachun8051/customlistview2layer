@@ -1,12 +1,12 @@
 ﻿ModuleBookmarks0=
 ModuleBookmarks1=
 ModuleBookmarks2=
-ModuleBreakpoints0=477
+ModuleBreakpoints0=492
 ModuleBreakpoints1=
 ModuleBreakpoints2=
 ModuleClosedNodes0=
 ModuleClosedNodes1=
 ModuleClosedNodes2=
-NavigationStack=Main,editHead,169,0,Main,edtQty_FocusChanged,773,6,Main,EquipItemPanel,720,2,Main,EventHandler,358,6,Main,FindNextHeadIndex,547,6,clsMapOfList,exchangeLine,176,0,Main,ExchangedHandler,399,6,Visual Designer,InputBox.bal,-100,3,Main,Globals,25,0,Main,Activity_Resume,57,0,clsMapOfList,FillTheMap2,223,0
+NavigationStack=Main,Activity_Resume,60,0,Main,Activity_Pause,62,0,Main,Activity_Create,33,0,Main,clv1_VisibleRangeChanged,681,6,Main,clv1_ItemLongClick,655,0,clsMapOfList,setUIIndex,27,0,clsMapOfList,EditLine,339,0,Main,editLine,209,0,Main,EventHandler,375,0,Main,ExchangedHandler,519,6
 SelectedBuild=0
 VisibleModules=1,2

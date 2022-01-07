@@ -103,7 +103,8 @@ Public Sub expandHead(i_headid As Int, i_ui As Int) As Boolean
 	If SubExists(m_callback, m_event) Then
 		mapShow.Put(i_headid, 1)
 		Dim lstLine As List = mapOne.Get(i_headid)
-		CallSubDelayed2(m_callback, m_event, CreateMap("action": "expanded", "uiindex": i_ui, "count": lstLine.size))
+		CallSubDelayed2(m_callback, m_event, _ 
+			CreateMap("action": "expanded", "uiindex": i_ui, "headid": i_headid, "count": lstLine.size))
 	End If
 	Return True
 End Sub
@@ -118,7 +119,8 @@ Public Sub collapseHead(i_headid As Int, i_ui As Int) As Boolean
 	If SubExists(m_callback, m_event) Then
 		mapShow.Put(i_headid, 0)
 		Dim lstLine As List = mapOne.Get(i_headid)
-		CallSubDelayed2(m_callback, m_event, CreateMap("action": "collapsed", "uiindex": i_ui, "count": lstLine.size))
+		CallSubDelayed2(m_callback, m_event, _ 
+			CreateMap("action": "collapsed", "uiindex": i_ui, "headid": i_headid, "count": lstLine.size))
 	End If
 	Return True
 End Sub
